@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cat, Dog, Tiger Classifier</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
+</head>
+<body>
+  <h1>Cat, Dog, Tiger Classifier</h1>
+
+  <input type="file" id="fileInput" accept="image/*">
+  <br><br>
+  <img id="preview" width="300" style="display:none;"/>
+  <p id="prediction">Prediction will appear here</p>
+
+  <script>
+    const MODEL_URL = "tm-model/";  // renamed to avoid conflict
+    let model;
+
+    // Load the model
+    async function init() {
+      model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+    }
+    init();
+
+    // When user uploads an image
+    document.getElementById("fileInput").addEventListener("change", async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Show preview
+      const img = document.getElementById("preview");
+      img.src = URL.createObjectURL(file);  // now works (using browser's URL)
+      img.style.display = "block";
+
+      img.onload = async () => {
+        // Predict
+        const prediction = await model.predict(img);
+        prediction.sort((a, b) => b.probability - a.probability);
+        document.getElementById("prediction").innerText =
+          `Prediction: ${prediction[0].className} (${(prediction[0].probability * 100).toFixed(2)}%)`;
+      };
+    });
+  </script>
+</body>
+</html>
